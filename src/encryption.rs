@@ -43,6 +43,8 @@ pub fn encrypt_data(data: &[u8], password: &str, algorithm: &Algorithm) -> Resul
     })
 }
 
+
+
 //decrypr data 
 use argon2::{Argon2, password_hash::{PasswordHasher, SaltString}};
 fn derive_key(password: &str, salt: &[u8]) -> Result<[u8; 32], Box<dyn std::error::Error>> {
