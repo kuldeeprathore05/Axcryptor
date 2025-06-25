@@ -1,33 +1,79 @@
 use axum::{
-    response::{Html, IntoResponse},
+    extract::Multipart,
+    http::StatusCode,
+    response::Json,
 };
-use axum_extra::extract::multipart::Multipart;
-use tokio::fs;
+use base64::{Engine as _, engine::general_purpose};
+use std::sync::OnceLock;
 use uuid::Uuid;
-use crate::utils;
+use crate::{
+    encryption::{encrypt_data, decrypt_data, DecryptionInput},
+    models::*,
+    //streaming::{StreamProcessor, split_into_chunks},
+};
 
-pub async fn serve_index() -> impl IntoResponse {
-    Html(fs::read_to_string("static/index.html").await.unwrap())
-}
+// static STREAM_PROCESSOR: OnceLock<StreamProcessor> = OnceLock::new();
 
-pub async fn handle_encrypt(mut multipart: Multipart) -> impl IntoResponse {
-    let mut file_bytes = Vec::new();
-    let mut password = String::new();
+// fn get_stream_processor() -> &'static StreamProcessor {
+//     STREAM_PROCESSOR.get_or_init(|| StreamProcessor::new())
+// }
 
-    while let Some(field) = multipart.next_field().await.unwrap() {
-        let name = field.name().unwrap().to_string();
-        let data = field.bytes().await.unwrap();
-
-        match name.as_str() {
-            "file" => file_bytes = data.to_vec(),
-            "password" => password = String::from_utf8(data.to_vec()).unwrap(),
+pub async fn encrypt_file(mut multipart: Multipart) -> Result<Json<EncryptResponse>, StatusCode> {
+    let mut algorithm = None;
+    let mut password = None;
+    let mut file_data = None;
+    let mut filename = None;
+    while let Some(field) = multipart.next_field().await.map_err(|_| StatusCode::BAD_REQUEST)? {
+        let field_name = field.name().unwrap_or("").to_string();
+        match field_name.as_str() {
+            "algorithm" => {
+                let value = field.text().await.map_err(|_| StatusCode::BAD_REQUEST)?;
+                algorithm = Some(match value.as_str() {
+                    "AES256" => Algorithm::AES256,
+                    "ChaCha20" => Algorithm::ChaCha20,
+                    _ => return Err(StatusCode::BAD_REQUEST),
+                });
+            }
+            "password" => {
+                password = Some(field.text().await.map_err(|_| StatusCode::BAD_REQUEST)?);
+            }
+            "file" => {
+                filename = field.file_name().map(|s| s.to_string());
+                file_data = Some(field.bytes().await.map_err(|_| StatusCode::BAD_REQUEST)?);
+            }
             _ => {}
         }
     }
 
-    let encrypted = utils::xor_encrypt(&file_bytes, &password);
-    let filename = format!("{}.enc", Uuid::new_v4());
-    fs::write(format!("static/{}", filename), encrypted).await.unwrap();
+    let algorithm = algorithm.ok_or(StatusCode::BAD_REQUEST)?;
+    let password = password.ok_or(StatusCode::BAD_REQUEST)?;
+    let file_data = file_data.ok_or(StatusCode::BAD_REQUEST)?;
 
-    format!("File encrypted successfully: /static/{}", filename)
+    match encrypt_data(&file_data, &password, &algorithm) {
+        Ok(result) => {
+            let file_id = Uuid::new_v4().to_string();
+            
+            // Combine salt + nonce + encrypted_data for storage
+            let mut combined = Vec::new();
+            combined.extend_from_slice(&result.salt);
+            combined.extend_from_slice(&result.nonce);
+            combined.extend_from_slice(&result.encrypted_data);
+            
+            let encrypted_b64 = general_purpose::STANDARD.encode(&combined);
+            
+            Ok(Json(EncryptResponse {
+                success: true,
+                message: format!("File '{}' encrypted successfully", filename.unwrap_or("unknown".to_string())),
+                file_id: Some(file_id),
+                encrypted_data: Some(encrypted_b64),
+            }))
+        }
+        Err(e) => Ok(Json(EncryptResponse {
+            success: false,
+            message: format!("Encryption failed: {}", e),
+            file_id: None,
+            encrypted_data: None,
+        }))
+    }
 }
+
