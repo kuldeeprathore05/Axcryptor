@@ -29,11 +29,11 @@ pub fn encrypt_data(data: &[u8], password: &str, algorithm: &Algorithm) -> Resul
     let mut nonce = vec![0u8; NONCE_SIZE];
     OsRng.fill_bytes(&mut nonce);
 
-    let key = derive_key(password, &salt)?;
+    let key = derive_key(password, &salt).unwrap();
     
     let encrypted_data = match algorithm {
-        Algorithm::AES256 => encrypt_aes(&data, &key, &nonce)?,
-        Algorithm::ChaCha20 => encrypt_chacha20(&data, &key, &nonce)?,
+        Algorithm::AES256 => encrypt_aes(&data, &key, &nonce),
+        Algorithm::ChaCha20 => encrypt_chacha20(&data, &key, &nonce),
     };
 
     Ok(EncryptionResult {
@@ -63,4 +63,39 @@ fn derive_key(password: &str, salt: &[u8]) -> Result<[u8; 32], Box<dyn std::erro
     key[..copy_len].copy_from_slice(&hash_slice[..copy_len]);
     
     Ok(key)
+}
+
+fn encrypt_aes(data: &[u8], key: &[u8; 32], nonce: &[u8]) -> Vec<u8> {
+    let cipher = Aes256Gcm::new_from_slice(key).unwrap();
+    
+    let nonce = Nonce::from_slice(&nonce[..12]);
+    
+    cipher.encrypt(nonce, data).unwrap()
+        
+}
+
+fn not_encrypt_aes(data: &[u8], key: &[u8; 32], nonce: &[u8]) -> Result<Vec<u8>> {
+    let cipher = Aes256Gcm::new_from_slice(key)
+        .map_err(|e| anyhow!("Failed to create AES cipher: {}", e))?;
+    
+    let nonce = Nonce::from_slice(&nonce[..12]);
+    
+    cipher.encrypt(nonce, data)
+        .map_err(|e| anyhow!("AES encryption failed: {}", e))
+}
+
+fn encrypt_chacha20(data: &[u8], key: &[u8; 32], nonce: &[u8]) -> Vec<u8> {
+    let cipher = ChaCha20Poly1305::new(Key::from_slice(key));
+    let nonce = chacha20poly1305::Nonce::from_slice(&nonce[..12]);
+    
+    cipher.encrypt(nonce, data).unwrap()
+}
+
+
+fn not_encrypt_chacha20(data: &[u8], key: &[u8; 32], nonce: &[u8]) -> Result<Vec<u8>> {
+    let cipher = ChaCha20Poly1305::new(Key::from_slice(key));
+    let nonce = chacha20poly1305::Nonce::from_slice(&nonce[..12]);
+    
+    cipher.encrypt(nonce, data)
+        .map_err(|e| anyhow!("ChaCha20 encryption failed: {}", e))
 }
