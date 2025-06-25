@@ -44,23 +44,21 @@ pub fn encrypt_data(data: &[u8], password: &str, algorithm: &Algorithm) -> Resul
 }
 
 //decrypr data 
+use argon2::{Argon2, password_hash::{PasswordHasher, SaltString}};
+fn derive_key(password: &str, salt: &[u8]) -> Result<[u8; 32], Box<dyn std::error::Error>> {
+    let salt_string = SaltString::encode_b64(salt)
+        .map_err(|e| format!("Salt encoding error: {}", e))?;
+    let argon2 = Argon2::default();
+    let password_hash = argon2.hash_password(password.as_bytes(), &salt_string)
+        .map_err(|e| format!("Password hashing error: {}", e))?;
+    let hash_bytes = password_hash.hash.ok_or("No hash generated")?;
 
-fn derive_key(password: &str, salt: &[u8]) -> Result<[u8; 32]> {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
-    
-    // Simple key derivation - in production, use PBKDF2 or Argon2
-    let mut hasher = DefaultHasher::new();
-    password.hash(&mut hasher);
-    salt.hash(&mut hasher);
-    
-    let hash = hasher.finish();
     let mut key = [0u8; 32];
+    let hash_slice = hash_bytes.as_bytes();
     
-    for (i, chunk) in hash.to_be_bytes().iter().cycle().take(32).enumerate() {
-        key[i] = *chunk;
-    }
+    
+    let copy_len = std::cmp::min(32, hash_slice.len());
+    key[..copy_len].copy_from_slice(&hash_slice[..copy_len]);
     
     Ok(key)
 }
-
