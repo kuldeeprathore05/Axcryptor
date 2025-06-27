@@ -101,8 +101,23 @@ document.getElementById('encryptForm').addEventListener('submit', async (e) => {
     
     const files = document.getElementById('encryptFiles').files;
     const algorithm = document.querySelector('.crypto-card.selected').dataset.algo;
-    
-    await processFiles('encrypt', files, password, algorithm);
+    console.log(algorithm)
+    console.log(password)
+     const formData = new FormData();
+      formData.append("algorithm", algorithm);
+      formData.append("password", password);
+      formData.append("file", files[0]);
+
+        const response = await fetch('/api/encrypt', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json(); // parses JSON
+
+        console.log("✅ Success:", data.success);
+        console.log("💬 Message:", data.message);
+        console.log("🆔 File ID:", data.file_id);
+        console.log("📦 Encrypted Data (Base64):", data.encrypted_data);
 });
 
 document.getElementById('decryptForm').addEventListener('submit', async (e) => {

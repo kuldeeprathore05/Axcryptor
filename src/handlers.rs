@@ -7,7 +7,7 @@ use base64::{Engine as _, engine::general_purpose};
 use std::sync::OnceLock;
 use uuid::Uuid;
 use crate::{
-    encryption::{encrypt_data, decrypt_data, DecryptionInput},
+    encryption::{encrypt_data},//, decrypt_data, DecryptionInput
     models::*,
     //streaming::{StreamProcessor, split_into_chunks},
 };
@@ -19,6 +19,7 @@ use crate::{
 // }
 
 pub async fn encrypt_file(mut multipart: Multipart) -> Result<Json<EncryptResponse>, StatusCode> {
+    println!("{}",123);
     let mut algorithm = None;
     let mut password = None;
     let mut file_data = None;
@@ -48,7 +49,9 @@ pub async fn encrypt_file(mut multipart: Multipart) -> Result<Json<EncryptRespon
     let algorithm = algorithm.ok_or(StatusCode::BAD_REQUEST)?;
     let password = password.ok_or(StatusCode::BAD_REQUEST)?;
     let file_data = file_data.ok_or(StatusCode::BAD_REQUEST)?;
-
+    println!("{:?}",algorithm);
+    println!("{:?}",password);
+    //println!("{:?}",file_data);
     match encrypt_data(&file_data, &password, &algorithm) {
         Ok(result) => {
             let file_id = Uuid::new_v4().to_string();
