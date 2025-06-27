@@ -14,6 +14,7 @@ use tokio::net::TcpListener;
 async fn main() {
     let app = Router::new()
         .route("/api/encrypt", post(encrypt_file))
+        .route("/api/decrypt", post(decrypt_file))
         .nest_service("/static", ServeDir::new("static"));
 
     let listener = TcpListener::bind("127.0.0.1:3000").await.unwrap();

@@ -1,3 +1,4 @@
+#![allow(unused)]
 use aes_gcm::{
     aead::{Aead, KeyInit, OsRng},
     Aes256Gcm, Nonce,
@@ -21,6 +22,8 @@ pub struct DecryptionInput {
     pub nonce: Vec<u8>,
     pub salt: Vec<u8>,
 }
+
+
 
 pub fn encrypt_data(data: &[u8], password: &str, algorithm: &Algorithm) -> Result<EncryptionResult> {
     let mut salt = vec![0u8; SALT_SIZE];
@@ -98,4 +101,32 @@ fn not_encrypt_chacha20(data: &[u8], key: &[u8; 32], nonce: &[u8]) -> Result<Vec
     
     cipher.encrypt(nonce, data)
         .map_err(|e| anyhow!("ChaCha20 encryption failed: {}", e))
+}
+
+
+pub fn decrypt_data(input: DecryptionInput, password: &str, algorithm: &Algorithm) -> Result<Vec<u8>> {
+    let key = derive_key(password, &input.salt).unwrap();
+    
+    let decrypted_data = match algorithm {
+        Algorithm::AES256 => decrypt_aes(&input.encrypted_data, &key, &input.nonce)?,
+        Algorithm::ChaCha20 => decrypt_chacha20(&input.encrypted_data, &key, &input.nonce)?,
+    };
+
+    Ok(decrypted_data)
+}
+fn decrypt_aes(encrypted_data: &[u8], key: &[u8; 32], nonce: &[u8]) -> Result<Vec<u8>> {
+    let cipher = Aes256Gcm::new_from_slice(key)
+        .map_err(|e| anyhow!("Failed to create AES cipher: {}", e))?;
+    
+    let nonce = Nonce::from_slice(&nonce[..12]);
+    
+    cipher.decrypt(nonce, encrypted_data)
+        .map_err(|e| anyhow!("AES decryption failed: {}", e))
+}
+fn decrypt_chacha20(encrypted_data: &[u8], key: &[u8; 32], nonce: &[u8]) -> Result<Vec<u8>> {
+    let cipher = ChaCha20Poly1305::new(Key::from_slice(key));
+    let nonce = chacha20poly1305::Nonce::from_slice(&nonce[..12]);
+    
+    cipher.decrypt(nonce, encrypted_data)
+        .map_err(|e| anyhow!("ChaCha20 decryption failed: {}", e))
 }
