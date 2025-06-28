@@ -201,3 +201,85 @@ document.getElementById('encryptConfirm').addEventListener('input', (e) => {
         e.target.style.borderColor = '#e5e7eb';
     }
 });
+
+
+document.getElementById('batchForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const password = document.getElementById('batchPassword').value;
+    const files = document.getElementById('batchFiles').files;
+    const algorithm = document.getElementById('batchAlgorithm').value;
+    const operation = document.querySelector('#batch .crypto-card.selected').dataset.operation;
+   
+    if(operation=="encrypt"){
+         console.log(operation)
+        const formData = new FormData();
+        formData.append('password', password);
+        formData.append('algorithm', algorithm);
+        
+        Array.from(files).forEach(file => {
+            formData.append('files', file);
+        });
+        console.log(files)
+
+        console.log(1);
+        const response = await fetch('/api/batch_encrypt', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+          downloadBase64AsFile(data.encrypted_data,data.file_id);
+        console.log(" succcess:", data.success);
+        console.log(" message:", data.message);
+        console.log(" File ID:", data.file_id);
+        console.log(" Encrypted Data (Base64):", data.encrypted_data);
+    }
+    else{
+       
+        console.log(password)
+        const file = files[0];
+
+        const base64String = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const base64 = reader.result.split(',')[1]; // Strip "data:*/*;base64,"
+                resolve(base64);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+
+        const formData = new FormData();
+        formData.append("password", password);
+        formData.append("files", base64String); 
+        const response = await fetch('/api/batch_decrypt', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+
+        console.log(data);
+        for(k=0;k<data.files.length;k++){
+            const binaryString = atob(data.files[k]);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+
+            const blob = new Blob([bytes], { type: "application/pdf" }); // Set proper MIME
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download ="decrypted.pdf";  // fallback filename
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+    }
+    
+});
