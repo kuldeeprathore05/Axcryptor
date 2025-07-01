@@ -17,7 +17,7 @@ async fn main() {
         .route("/api/decrypt", post(decrypt_file))
         .route("/api/batch_encrypt", post(encrypt_batch))
         .route("/api/batch_decrypt", post(decrypt_batch))
-        .nest_service("/static", ServeDir::new("static"));
+        .nest_service("/", ServeDir::new("static"));
 
     let listener = TcpListener::bind("127.0.0.1:3000").await.unwrap();
     println!("Server running at http://127.0.0.1:3000");

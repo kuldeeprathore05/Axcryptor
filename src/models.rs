@@ -22,15 +22,14 @@ pub struct DecryptRequest {
 pub struct EncryptResponse {
     pub success: bool,
     pub message: String,
-    pub file_id: Option<String>,
-    pub encrypted_data: Option<String>,
+    pub result : Vec<(String,String)>
 }
 
 #[derive(Debug, Serialize)]
 pub struct DecryptResponse {
     pub success: bool,
     pub message: String,
-    pub decrypted_data: Option<String>,
+    pub decrypted_data: Vec<String>,
     pub filename: Option<String>,
 }
 
