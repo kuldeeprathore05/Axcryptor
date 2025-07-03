@@ -1,18 +1,4 @@
-# Ignore compiled files
 /target
-**/*.rs.bk
 Cargo.lock
 
-# IDE/workspace settings
-.idea/
-.vscode/
-*.log
-*.tmp
-*.swp
 
-# OS files
-.DS_Store
-Thumbs.db
-
-# Secrets
-.env

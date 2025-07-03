@@ -1,0 +1,4 @@
+name = "axcryptor"
+
+[build]
+assets = ["static"]

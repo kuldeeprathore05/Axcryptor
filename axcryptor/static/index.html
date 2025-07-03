@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure File Encryption Tool</title>
+    <link rel="stylesheet" href="/helper/index.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Secure File Encryption</h1>
+            <p>Advanced encryption with AES-256 and ChaCha20 algorithms</p>
+        </div>
+
+        <div class="main-card">
+            <div class="tabs">
+                <button class="tab active" data-tab="encrypt">🔒 Encrypt</button>
+                <button class="tab" data-tab="decrypt">🔓 Decrypt</button>
+                <button class="tab" data-tab="batch">📦 Batch Process</button>
+            </div>
+
+            <!-- Encrypt Tab -->
+            <div class="tab-content active" id="encrypt">
+                <form id="encryptForm">
+                    <div class="form-group">
+                        <label>Choose Encryption Algorithm</label>
+                        <div class="crypto-options">
+                            <div class="crypto-card selected" data-algo="AES256">
+                                <h3>🛡️ AES-256</h3>
+                                <p>Industry standard, fast and secure</p>
+                            </div>
+                            <div class="crypto-card" data-algo="ChaCha20">
+                                <h3>⚡ ChaCha20</h3>
+                                <p>Modern, mobile-optimized cipher</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="form-group">
+                            <label for="encryptPassword">Password</label>
+                            <input type="password" id="encryptPassword" class="form-control" placeholder="Enter strong password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="encryptConfirm">Confirm Password</label>
+                            <input type="password" id="encryptConfirm" class="form-control" placeholder="Confirm password" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Select Files to Encrypt</label>
+                        <div class="file-drop-zone" id="encryptDropZone">
+                            <input type="file" id="encryptFiles" multiple accept="*/*">
+                            <div class="drop-zone-content">
+                                <div class="drop-zone-icon">📁</div>
+                                <h3>Drop files here or click to browse</h3>
+                                <p>Supports multiple files and streaming for large files</p>
+                                <div class="streaming-indicator" style="display: none;">
+                                    <div class="streaming-dot"></div>
+                                    Streaming mode enabled for large files
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="file-list" id="encryptFileList"></div>
+
+                    <button type="submit" class="btn" id="encryptBtn">
+                        🔒 Encrypt Files
+                    </button>
+
+                    <div class="progress-container" id="encryptProgress">
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                        <div class="progress-text">Processing files...</div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Decrypt Tab -->
+            <div class="tab-content" id="decrypt">
+                <form id="decryptForm">
+                    <div class="form-group">
+                        <label for="decryptPassword">Password</label>
+                        <input type="password" id="decryptPassword" class="form-control" placeholder="Enter decryption password" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Select Encrypted Files</label>
+                        <div class="file-drop-zone" id="decryptDropZone">
+                            <input type="file" id="decryptFiles" multiple accept=".enc">
+                            <div class="drop-zone-content">
+                                <div class="drop-zone-icon">🔓</div>
+                                <h3>Drop encrypted files here or click to browse</h3>
+                                <p>Only .enc files will be processed</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="file-list" id="decryptFileList"></div>
+
+                    <button type="submit" class="btn" id="decryptBtn">
+                        🔓 Decrypt Files
+                    </button>
+
+                    <div class="progress-container" id="decryptProgress">
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                        <div class="progress-text">Decrypting files...</div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Batch Process Tab -->
+            <div class="tab-content" id="batch">
+                <form id="batchForm">
+                    <div class="form-group">
+                        <label>Batch Operation</label>
+                        <div class="crypto-options">
+                            <div class="crypto-card selected" data-operation="encrypt">
+                                <h3>🔒 Batch Encrypt</h3>
+                                <p>Encrypt multiple files at once</p>
+                            </div>
+                            <div class="crypto-card" data-operation="decrypt">
+                                <h3>🔓 Batch Decrypt</h3>
+                                <p>Decrypt multiple files at once</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="form-group">
+                            <label for="batchAlgorithm">Algorithm</label>
+                            <select id="batchAlgorithm" class="form-control">
+                                <option value="AES256">AES-256</option>
+                                <option value="ChaCha20">ChaCha20</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="batchPassword">Password</label>
+                            <input type="password" id="batchPassword" class="form-control" placeholder="Enter password" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Select Files for Batch Processing</label>
+                        <div class="file-drop-zone" id="batchDropZone">
+                            <input type="file" id="batchFiles" multiple accept="*/*">
+                            <div class="drop-zone-content">
+                                <div class="drop-zone-icon">📦</div>
+                                <h3>Drop multiple files here</h3>
+                                <p>All files will be processed with the same settings</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="file-list" id="batchFileList"></div>
+
+                    <button type="submit" class="btn" id="batchBtn">
+                        📦 Process Batch
+                    </button>
+
+                    <div class="progress-container" id="batchProgress">
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                        <div class="progress-text">Processing batch...</div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="download-section" id="downloadSection" style="display: none;">
+                <h3>📥 Download Processed Files</h3>
+                <p>Your files have been processed successfully. Click to download:</p>
+                <div id="downloadLinks"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/helper/app.js"></script>
+</body>
+</html>
