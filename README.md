@@ -37,7 +37,7 @@ Axcryptor is a secure, browser-based file encryption tool built using **Rust** a
 
 The entire encryption/decryption process is visualized in this flowchart:
 
-![Encryption-Decryption Flowchart](static/screens/flowchart.png)
+![Encryption-Decryption Flowchart](static/screens/Screenshot%202025-07-03%20163734.png)
 
 ---
 
