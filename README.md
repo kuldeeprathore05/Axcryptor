@@ -18,7 +18,7 @@ Axcryptor is a secure, browser-based file encryption tool built using **Rust** a
 
 ---
 
-## 🧰 Built With
+## Built With
 
 - [Rust](https://www.rust-lang.org/)
 - [Axum](https://docs.rs/axum)
