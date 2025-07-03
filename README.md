@@ -1,6 +1,9 @@
 # 🔐 Axcryptor – Secure File Encryption Web App
 
 [![Shuttle Deploy](https://img.shields.io/badge/deployed%20on-shuttle-blue.svg)](https://axcryptor-y3ua.shuttle.app/)
+### ✨ Live Demo  
+Check it out live:  
+🔗 [https://axcryptor-y3ua.shuttle.app](https://axcryptor-y3ua.shuttle.app)
 
 Axcryptor is a secure, browser-based file encryption tool built using **Rust** and the **Axum** web framework. It allows users to encrypt and decrypt files using **AES-256** or **ChaCha20**, with support for **batch processing** and **streaming large files** — all processed **client-side** with no server-side file storage.
 
